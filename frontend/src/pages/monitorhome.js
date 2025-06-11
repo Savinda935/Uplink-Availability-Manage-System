@@ -1,158 +1,210 @@
 import React, { useState, useEffect } from 'react';
-import { Pie } from 'react-chartjs-2';
 import 'chart.js/auto';
 import { getSectors, addOrUpdateSector, SECTOR_LIST } from '../API';
 import fitlogo from '../images/fitlogo.png';
+import AmchartsPie3D from '../components/AmchartsPie3D';
+import noc from '../images/noc.jpg';
+import Swal from 'sweetalert2';
 
 function MonitorHome() {
   const [selectedSectors, setSelectedSectors] = useState([]);
   const [sectors, setSectors] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
   const [average, setAverage] = useState(0);
   const [highest, setHighest] = useState(0);
   const [lowest, setLowest] = useState(0);
-
-  // Refactor: Use a single state for selected sectors and their entered percentages
   const [sectorInputs, setSectorInputs] = useState({});
   const [uptime100Count, setUptime100Count] = useState(0);
   const [uptimeLessThan100Count, setUptimeLessThan100Count] = useState(0);
+  const [amChartInstance, setAmChartInstance] = useState(null);
 
-  // Styles
+  // Enhanced Styles with modern design
   const containerStyle = {
-    maxWidth: 1200,
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg,rgb(248, 248, 248) 0%,rgb(245, 244, 247) 100%)',
+    padding: '20px',
+    fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  };
+
+  const mainContentStyle = {
+    maxWidth: '1400px',
     margin: '0 auto',
-    padding: 24,
-    fontFamily: 'Arial, sans-serif',
-    backgroundColor: '#f4f7f6',
-    borderRadius: 8,
-    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '24px',
+    boxShadow: '0 25px 50px rgba(0,0,0,0.15)',
+    border: '1px solid rgba(255,255,255,0.2)',
+    overflow: 'hidden'
   };
 
   const headerStyle = {
+    backgroundImage: `url(${noc})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    padding: '40px',
     textAlign: 'center',
-    color: '#333',
-    marginBottom: 20
+    position: 'relative',
+    overflow: 'hidden'
+  };
+  
+
+  const headerTitleStyle = {
+    fontSize: '2.5rem',
+    fontWeight: '700',
+    marginBottom: '10px',
+    textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+    background: 'linear-gradient(45deg, #fff, #e3f2fd)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    backgroundClip: 'text'
   };
 
   const logoStyle = {
+    width: '120px',
+    height: 'auto',
+    margin: '20px auto',
     display: 'block',
-    margin: '0 auto 20px auto',
-    maxWidth: '150px',
-    height: 'auto'
+    filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.2))',
+    borderRadius: '12px',
+    background: 'rgba(255,255,255,0.1)',
+    padding: '10px'
   };
-
-  const messageStyle = (isError) => ({
-    padding: 10,
-    marginBottom: 16,
-    backgroundColor: isError ? '#ffebee' : '#e8f5e8',
-    color: isError ? '#c62828' : '#2e7d32',
-    borderRadius: 4,
-    border: `1px solid ${isError ? '#c62828' : '#2e7d32'}`
-  });
 
   const gridContainerStyle = {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gap: 32
+    gap: '40px',
+    padding: '40px'
+  };
+
+  const sectionStyle = {
+    background: 'rgba(255,255,255,0.8)',
+    borderRadius: '20px',
+    padding: '30px',
+    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+    border: '1px solid rgba(255,255,255,0.3)',
+    backdropFilter: 'blur(10px)'
   };
 
   const sectionTitleStyle = {
-    color: '#555',
-    marginBottom: 15,
-    borderBottom: '1px solid #eee',
-    paddingBottom: 10
+    fontSize: '1.5rem',
+    fontWeight: '600',
+    color: '#2d3748',
+    marginBottom: '20px',
   };
 
   const selectStyle = {
     width: '100%',
-    minHeight: 120,
-    padding: 10,
-    border: '1px solid #ccc',
-    borderRadius: 4,
-    backgroundColor: '#fff',
-    fontSize: 14,
-    marginBottom: 10
-  };
-
-  const smallTextStyle = {
-    color: '#666',
-    fontSize: 12
+    minHeight: '140px',
+    padding: '16px',
+    border: '2px solid #e2e8f0',
+    borderRadius: '12px',
+    background: 'rgba(255,255,255,0.9)',
+    fontSize: '14px',
+    marginBottom: '12px',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+    fontFamily: 'inherit'
   };
 
   const inputRowStyle = {
-    margin: '12px 0',
+    margin: '16px 0',
     display: 'flex',
     alignItems: 'center',
-    gap: 8
+    gap: '12px',
+    padding: '12px',
+    background: 'rgba(255,255,255,0.6)',
+    borderRadius: '10px',
+    transition: 'all 0.3s ease',
+    border: '1px solid rgba(255,255,255,0.4)'
   };
 
   const inputLabelStyle = {
-    minWidth: 70,
-    fontWeight: 'bold',
-    color: '#444'
+    minWidth: '100px',
+    fontWeight: '600',
+    color: '#4a5568',
+    fontSize: '14px'
   };
 
   const inputFieldStyle = {
-    width: 80,
-    padding: '8px 10px',
-    border: '1px solid #ccc',
-    borderRadius: 4,
-    fontSize: 14
+    width: '100px',
+    padding: '10px 14px',
+    border: '2px solid #e2e8f0',
+    borderRadius: '8px',
+    fontSize: '14px',
+    background: 'white',
+    transition: 'all 0.3s ease',
+    fontFamily: 'inherit'
   };
 
-  const saveButtonStyle = {
-    marginTop: 16,
-    padding: '10px 20px',
-    backgroundColor: '#007bff',
+  const modernButtonStyle = {
+    padding: '14px 28px',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     color: 'white',
     border: 'none',
-    borderRadius: 4,
+    borderRadius: '12px',
     cursor: 'pointer',
-    fontSize: 16,
-    fontWeight: 'bold',
-    transition: 'background-color 0.3s ease'
-  };
-
-  const buttonDisabledStyle = {
-    cursor: 'not-allowed',
-    opacity: 0.6
+    fontSize: '16px',
+    fontWeight: '600',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+    marginTop: '20px',
+    position: 'relative',
+    overflow: 'hidden'
   };
 
   const chartContainerStyle = {
-    marginBottom: 24,
-    width: '100%',
-    maxWidth: 400,
-    margin: '0 auto',
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 8,
-    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+    background: 'rgba(255,255,255,0.95)',
+    borderRadius: '20px',
+    padding: '30px',
+    boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
+    border: '1px solid rgba(255,255,255,0.3)',
+    position: 'relative',
+    backdropFilter: 'blur(15px)',
+    marginBottom: '30px'
   };
 
   const analysisContainerStyle = {
-    backgroundColor: '#f5f5f5',
-    padding: 16,
-    borderRadius: 8,
-    border: '1px solid #eee'
+    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+    padding: '25px',
+    borderRadius: '16px',
+    border: '1px solid rgba(102, 126, 234, 0.2)',
+    backdropFilter: 'blur(10px)'
+  };
+
+  const statsCardStyle = {
+    background: 'rgba(255,255,255,0.9)',
+    padding: '20px',
+    borderRadius: '12px',
+    margin: '10px 0',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+    border: '1px solid rgba(255,255,255,0.3)',
+    transition: 'all 0.3s ease'
   };
 
   const placeholderStyle = {
     textAlign: 'center',
-    padding: 40,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    border: '1px solid #eee',
-    color: '#666'
+    padding: '60px 40px',
+    background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
+    borderRadius: '20px',
+    border: '2px dashed rgba(102, 126, 234, 0.3)',
+    color: '#667eea',
+    fontSize: '18px',
+    fontWeight: '500'
   };
 
-  // Fetch sectors from backend on component mount
+  const smallTextStyle = {
+    color: '#718096',
+    fontSize: '12px',
+    marginTop: '8px',
+    fontStyle: 'italic'
+  };
+
   useEffect(() => {
     fetchSectors();
   }, []);
 
   useEffect(() => {
-    // Recalculate analysis whenever percentages or selectedSectors change
     const currentValues = Object.entries(sectorInputs)
       .filter(([name, value]) => selectedSectors.includes(name) && value !== '')
       .map(([name, value]) => Number(value) || 0);
@@ -165,23 +217,19 @@ function MonitorHome() {
     setHighest(high);
     setLowest(low);
 
-    // Calculate data for the pie chart based on 100% vs <100% uptime
     const count100 = selectedSectors.filter(s => Number(sectorInputs[s]) === 100).length;
     const countLessThan100 = selectedSectors.length - count100;
 
     setUptime100Count(count100);
     setUptimeLessThan100Count(countLessThan100);
-
   }, [selectedSectors, sectorInputs]);
 
   const fetchSectors = async () => {
     try {
       setLoading(true);
-      setMessage('');
       const data = await getSectors();
       setSectors(data);
       
-      // Initialize sectorInputs only with data from backend for sectors in SECTOR_LIST
       const initialInputs = {};
       const initialSelected = [];
       data.forEach(sector => {
@@ -191,12 +239,13 @@ function MonitorHome() {
         }
       });
       setSectorInputs(initialInputs);
-
-      // Also update selectedSectors to reflect all currently known and filtered sectors
       setSelectedSectors(initialSelected);
-
     } catch (error) {
-      setMessage('Error fetching sectors: ' + error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error fetching sectors',
+        text: error.message
+      });
     } finally {
       setLoading(false);
     }
@@ -207,11 +256,10 @@ function MonitorHome() {
     const selected = options.filter(o => o.selected).map(o => o.value);
     setSelectedSectors(selected);
 
-    // Ensure input fields are only shown for selected sectors
     setSectorInputs(prev => {
       const newInputs = {};
       selected.forEach(s => {
-        newInputs[s] = prev[s] !== undefined ? prev[s] : ''; // Keep existing value or set empty
+        newInputs[s] = prev[s] !== undefined ? prev[s] : '';
       });
       return newInputs;
     });
@@ -225,13 +273,16 @@ function MonitorHome() {
 
   const handleSaveAllSelectedSectors = async () => {
     if (selectedSectors.length === 0) {
-      setMessage('Please select at least one sector to save.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Sectors Selected',
+        text: 'Please select at least one sector to save.'
+      });
       return;
     }
 
     try {
       setLoading(true);
-      setMessage('');
       let successCount = 0;
       let errorCount = 0;
 
@@ -239,7 +290,11 @@ function MonitorHome() {
         const availability = Number(sectorInputs[sectorName]);
 
         if (isNaN(availability) || availability < 0 || availability > 100) {
-          setMessage(`Invalid availability for ${sectorName}. Please enter a value between 0-100.`);
+          Swal.fire({
+            icon: 'error',
+            title: 'Invalid Availability',
+            text: `Invalid availability for ${sectorName}. Please enter a value between 0-100.`
+          });
           errorCount++;
           continue;
         }
@@ -254,16 +309,27 @@ function MonitorHome() {
       }
       
       if (successCount > 0) {
-        setMessage(`Successfully saved ${successCount} sectors.`);
+        Swal.fire({
+          icon: 'success',
+          title: 'Saved!',
+          text: `Successfully saved ${successCount} sectors.`
+        });
       }
       if (errorCount > 0) {
-        setMessage(prev => `${prev} Failed to save ${errorCount} sectors.`);
+        Swal.fire({
+          icon: 'error',
+          title: 'Partial Save',
+          text: `Failed to save ${errorCount} sectors.`
+        });
       }
 
-      fetchSectors(); // Refresh data after saving
-
+      fetchSectors();
     } catch (error) {
-      setMessage('Error saving selected sectors: ' + error.message);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error saving sectors',
+        text: error.message
+      });
     } finally {
       setLoading(false);
     }
@@ -271,13 +337,15 @@ function MonitorHome() {
 
   const handleGenerateReport = () => {
     if (selectedSectors.length === 0) {
-      setMessage('Please select sectors to generate a report.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Sectors Selected',
+        text: 'Please select sectors to generate a report.'
+      });
       return;
     }
 
     let csvContent = 'Uplink Availability Report\n\n';
-
-    // Section 1: Overall Analysis
     csvContent += 'Overall Analysis\n';
     csvContent += `Average Availability,%${average}\n`;
     csvContent += `Highest Availability,%${highest}\n`;
@@ -285,8 +353,6 @@ function MonitorHome() {
     csvContent += `Total Selected Sectors,${selectedSectors.length}\n`;
     csvContent += `Uptime = 100% Sectors,${uptime100Count}\n`;
     csvContent += `Uptime < 100% Sectors,${uptimeLessThan100Count}\n\n`;
-
-    // Section 2: Individual Sector Data
     csvContent += 'Individual Sector Data\n';
     csvContent += 'Sector Name,Availability Percentage\n';
     selectedSectors.forEach(sectorName => {
@@ -304,127 +370,365 @@ function MonitorHome() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    setMessage('Report generated successfully!');
+    Swal.fire({
+      icon: 'success',
+      title: 'Report Generated!',
+      text: 'Uplink availability report has been generated successfully.'
+    });
   };
 
-  // Prepare data for pie chart
-  const pieData = {
-    labels: ['Uptime = 100%', 'Uptime < 100%'],
-    datasets: [
-      {
-        data: [uptime100Count, uptimeLessThan100Count],
-        backgroundColor: [
-          '#4caf50', // Green for 100% Uptime
-          '#ffc107', // Gold/Yellow for <100% Uptime
-        ],
-      },
-    ],
+  const handleChartExport = () => {
+    if (amChartInstance) {
+      amChartInstance.export.capture({
+        format: "png",
+        fileName: "uplink_availability_chart"
+      });
+    } else {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Chart Instance Not Ready',
+        text: 'Chart instance not ready for export.'
+      });
+    }
   };
 
   return (
     <div style={containerStyle}>
-      <h2 style={headerStyle}>Uplink Availability Dashboard</h2>
-      
-      <img src={fitlogo} alt="Fit Logo" style={logoStyle} />
-      
-      {message && (
-        <div style={messageStyle(message.includes('Error'))}>
-          {message}
+      <div style={mainContentStyle}>
+        <div style={headerStyle}>
+          <h1 style={headerTitleStyle}>Uplink Availability Dashboard</h1>
+          <p style={{
+            fontSize: '1.1rem',
+            opacity: 0.9,
+            margin: 0,
+            fontWeight: '300'
+          }}>
+            Monitor and analyze sector performance in real-time
+          </p>
+          <img src={fitlogo} alt="Fit Logo" style={logoStyle} />
+          
+          {/* Decorative elements */}
+          <div style={{
+            position: 'absolute',
+            top: '-50px',
+            right: '-50px',
+            width: '200px',
+            height: '200px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.1)',
+            filter: 'blur(40px)'
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-30px',
+            left: '-30px',
+            width: '150px',
+            height: '150px',
+            borderRadius: '50%',
+            background: 'rgba(255,255,255,0.08)',
+            filter: 'blur(30px)'
+          }} />
         </div>
-      )}
+        
+        <div style={gridContainerStyle}>
+          {/* Left Column */}
+          <div style={sectionStyle}>
+            <h3 style={{ ...sectionTitleStyle, display: 'flex', alignItems: 'center' }} className="section-title-icon">
+              Sector Management
+            </h3>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <label htmlFor="sector-select" style={{
+                display: 'block',
+                marginBottom: '12px',
+                fontWeight: '600',
+                color: '#4a5568',
+                fontSize: '16px'
+              }}>
+                Select Sectors for View/Edit:
+              </label>
+              <select
+                id="sector-select"
+                multiple
+                value={selectedSectors}
+                onChange={handleSectorChange}
+                style={{
+                  ...selectStyle,
+                  ':focus': {
+                    borderColor: '#667eea',
+                    boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)'
+                  }
+                }}
+              >
+                {SECTOR_LIST.map(sector => (
+                  <option key={sector} value={sector} style={{
+                    padding: '8px',
+                    fontSize: '14px'
+                  }}>
+                    {sector}
+                  </option>
+                ))}
+              </select>
+              <small style={smallTextStyle}>
+                💡 Hold Ctrl (or Cmd on Mac) to select multiple sectors
+              </small>
+            </div>
 
-      <div style={gridContainerStyle}>
-        {/* Left Column - Sector Selection and Input */}
-        <div>
-          <div style={{ marginBottom: 16 }}>
-            <label htmlFor="sector-select"><b>Select Sectors for View/Edit:</b></label><br />
-            <select
-              id="sector-select"
-              multiple
-              value={selectedSectors}
-              onChange={handleSectorChange}
-              style={selectStyle}
-            >
-              {SECTOR_LIST.map(sector => (
-                <option key={sector} value={sector}>{sector}</option>
-              ))}
-            </select>
-            <small style={smallTextStyle}>Hold Ctrl (or Cmd on Mac) to select multiple sectors</small>
+            {selectedSectors.length > 0 && (
+              <div>
+                <h4 style={{
+                  ...sectionTitleStyle,
+                  fontSize: '1.2rem',
+                  marginBottom: '20px'
+                }}>
+                  📝 Enter/Edit Availability Percentages:
+                </h4>
+                
+                <div style={{
+                  maxHeight: '400px',
+                  overflowY: 'auto',
+                  padding: '10px',
+                  background: 'rgba(255,255,255,0.3)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255,255,255,0.4)'
+                }}>
+                  {selectedSectors.map(sectorName => (
+                    <div key={sectorName} style={{
+                      ...inputRowStyle,
+                      ':hover': {
+                        background: 'rgba(255,255,255,0.8)',
+                        transform: 'translateY(-1px)'
+                      }
+                    }}>
+                      <label style={inputLabelStyle}>{sectorName}:</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={sectorInputs[sectorName] !== undefined ? sectorInputs[sectorName] : ''}
+                        onChange={e => handlePercentageChange(sectorName, e.target.value)}
+                        style={{
+                          ...inputFieldStyle,
+                          ':focus': {
+                            borderColor: '#667eea',
+                            boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)'
+                          }
+                        }}
+                        placeholder="0.00"
+                      />
+                      <span style={{ color: '#667eea', fontWeight: '600' }}>%</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <button 
+                  onClick={handleSaveAllSelectedSectors}
+                  disabled={loading || selectedSectors.length === 0}
+                  style={{
+                    ...modernButtonStyle,
+                    width: '100%',
+                    opacity: loading || selectedSectors.length === 0 ? 0.6 : 1,
+                    cursor: loading || selectedSectors.length === 0 ? 'not-allowed' : 'pointer',
+                    ':hover': !loading && selectedSectors.length > 0 ? {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 8px 25px rgba(102, 126, 234, 0.6)'
+                    } : {}
+                  }}
+                >
+                  {loading ? '💾 Saving...' : '💾 Save All Selected Sectors'}
+                </button>
+              </div>
+            )}
           </div>
 
-          {selectedSectors.length > 0 && (
-            <div style={{ marginBottom: 24 }}>
-              <h4 style={sectionTitleStyle}>Enter/Edit Availability Percentages:</h4>
-              {selectedSectors.map(sectorName => (
-                <div key={sectorName} style={inputRowStyle}>
-                  <label style={inputLabelStyle}>{sectorName}:</label>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    value={sectorInputs[sectorName] !== undefined ? sectorInputs[sectorName] : ''}
-                    onChange={e => handlePercentageChange(sectorName, e.target.value)}
-                    style={inputFieldStyle}
-                    placeholder="%"
+          {/* Right Column */}
+          <div style={sectionStyle}>
+            <h3 style={{ ...sectionTitleStyle, display: 'flex', alignItems: 'center' }} className="section-title-icon">
+              Analytics & Visualization
+            </h3>
+            
+            {selectedSectors.length > 0 ? (
+              <div>
+                <div style={chartContainerStyle}>
+                  <div style={{
+                    position: 'absolute',
+                    top: '20px',
+                    left: '20px',
+                    color: '#a0aec0',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    zIndex: 10,
+                    background: 'rgba(255,255,255,0.8)',
+                    padding: '4px 8px',
+                    borderRadius: '6px'
+                  }}>
+                    JS chart by amCharts
+                  </div>
+                  
+                  <AmchartsPie3D
+                    uptime100Count={uptime100Count}
+                    uptimeLessThan100Count={uptimeLessThan100Count}
+                    setChartInstance={setAmChartInstance}
                   />
-                  <span>%</span>
                 </div>
-              ))}
-              <button 
-                onClick={handleSaveAllSelectedSectors}
-                disabled={loading || selectedSectors.length === 0}
-                style={loading || selectedSectors.length === 0 ? {...saveButtonStyle, ...buttonDisabledStyle} : saveButtonStyle}
-              >
-                {loading ? 'Saving...' : 'Save All Selected Sectors'}
-              </button>
-            </div>
-          )}
-        </div>
 
-        {/* Right Column - Chart and Analysis */}
-        <div>
-          {selectedSectors.length > 0 ? (
-            <div>
-              <div style={chartContainerStyle}>
-                <Pie data={pieData} />
+                {selectedSectors.length > 0 && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: '30px',
+                    gap: '20px'
+                  }}>
+                    <div style={{
+                      ...statsCardStyle,
+                      flex: 1,
+                      textAlign: 'center',
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1))',
+                      border: '1px solid rgba(16, 185, 129, 0.3)'
+                    }}>
+                      <div style={{ fontSize: '14px', color: '#059669', fontWeight: '600' }}>
+                        🟢 Uptime = 100%
+                      </div>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#047857', marginTop: '8px' }}>
+                        {(selectedSectors.length > 0 ? (uptime100Count / selectedSectors.length * 100).toFixed(1) : 0)}%
+                      </div>
+                    </div>
+                    
+                    <div style={{
+                      ...statsCardStyle,
+                      flex: 1,
+                      textAlign: 'center',
+                      background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1))',
+                      border: '1px solid rgba(239, 68, 68, 0.3)'
+                    }}>
+                      <div style={{ fontSize: '14px', color: '#dc2626', fontWeight: '600' }}>
+                        🔴 Untreated Patients
+                      </div>
+                      <div style={{ fontSize: '24px', fontWeight: '700', color: '#b91c1c', marginTop: '8px' }}>
+                        {(selectedSectors.length > 0 ? (uptimeLessThan100Count / selectedSectors.length * 100).toFixed(1) : 0)}%
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div style={analysisContainerStyle}>
+                  <h4 style={{ ...sectionTitleStyle, fontSize: '1.3rem', marginBottom: '20px', display: 'flex', alignItems: 'center' }} className="section-title-icon">
+                    Detailed Analysis
+                  </h4>
+                  
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '15px',
+                    marginBottom: '20px'
+                  }}>
+                    <div style={statsCardStyle}>
+                      <strong style={{ color: '#4a5568' }}>📈 Average:</strong>
+                      <span style={{ color: '#667eea', fontWeight: '600', marginLeft: '8px' }}>
+                        {average}%
+                      </span>
+                    </div>
+                    <div style={statsCardStyle}>
+                      <strong style={{ color: '#4a5568' }}>🎯 Highest:</strong>
+                      <span style={{ color: '#10b981', fontWeight: '600', marginLeft: '8px' }}>
+                        {highest}%
+                      </span>
+                    </div>
+                    <div style={statsCardStyle}>
+                      <strong style={{ color: '#4a5568' }}>📉 Lowest:</strong>
+                      <span style={{ color: '#f56565', fontWeight: '600', marginLeft: '8px' }}>
+                        {lowest}%
+                      </span>
+                    </div>
+                    <div style={statsCardStyle}>
+                      <strong style={{ color: '#4a5568' }}>📍 Total Sectors:</strong>
+                      <span style={{ color: '#667eea', fontWeight: '600', marginLeft: '8px' }}>
+                        {selectedSectors.length}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    background: 'rgba(255,255,255,0.7)',
+                    padding: '20px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255,255,255,0.4)'
+                  }}>
+                    <div style={{ marginBottom: '12px' }}>
+                      <strong style={{ color: '#10b981' }}>✅ Perfect Uptime (100%):</strong>
+                      <span style={{ marginLeft: '8px', color: '#047857', fontWeight: '600' }}>
+                        {uptime100Count} sectors ({(selectedSectors.length > 0 ? (uptime100Count / selectedSectors.length * 100).toFixed(0) : 0)}%)
+                      </span>
+                    </div>
+                    <div>
+                      <strong style={{ color: '#f56565' }}>⚠️ Needs Attention (&lt;100%):</strong>
+                      <span style={{ marginLeft: '8px', color: '#dc2626', fontWeight: '600' }}>
+                        {uptimeLessThan100Count} sectors ({(selectedSectors.length > 0 ? (uptimeLessThan100Count / selectedSectors.length * 100).toFixed(0) : 0)}%)
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              
-              <div style={analysisContainerStyle}>
-                <h4 style={sectionTitleStyle}>Analysis of Selected Sectors</h4>
-                <p><b>Average Availability:</b> {average}%</p>
-                <p><b>Highest Availability:</b> {highest}%</p>
-                <p><b>Lowest Availability:</b> {lowest}%</p>
-                <p><b>Total Selected Sectors:</b> {selectedSectors.length}</p>
-                <p>
-                  <b>Uptime = 100%:</b> {uptime100Count} sectors ({(selectedSectors.length > 0 ? (uptime100Count / selectedSectors.length * 100).toFixed(0) : 0)}%)
-                </p>
-                <p>
-                  <b>Uptime &lt; 100%:</b> {uptimeLessThan100Count} sectors ({(selectedSectors.length > 0 ? (uptimeLessThan100Count / selectedSectors.length * 100).toFixed(0) : 0)}%)
+            ) : (
+              <div style={placeholderStyle}>
+                <div style={{ fontSize: '48px', marginBottom: '20px' }}>📊</div>
+                <p style={{ margin: '0', fontSize: '16px' }}>
+                  Select sectors from the left panel to view their interactive chart and detailed analysis
                 </p>
               </div>
-            </div>
-          ) : (
-            <div style={placeholderStyle}>
-              <p>Select sectors from the left to view their chart and analysis.</p>
-            </div>
-          )}
-          {selectedSectors.length > 0 && (
-            <button
-              onClick={handleGenerateReport}
-              style={{
-                ...saveButtonStyle, // Reusing existing button style
-                backgroundColor: '#28a745', // Green for export
-                marginTop: 20,
-                display: 'block', // Make it a block element to center or give full width
-                margin: '20px auto 0 auto' // Center the button
-              }}
-            >
-              Generate Report (CSV)
-            </button>
-          )}
+            )}
+            
+            {selectedSectors.length > 0 && (
+              <button
+                onClick={handleGenerateReport}
+                style={{
+                  ...modernButtonStyle,
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
+                  width: '100%',
+                  fontSize: '16px',
+                  marginTop: '20px',
+                  ':hover': {
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 25px rgba(16, 185, 129, 0.6)'
+                  }
+                }}
+              >
+                📋 Generate Detailed Report (CSV)
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Global animations */}
+      <style>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        input:focus, select:focus {
+          outline: none;
+          border-color: #667eea !important;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+        }
+        
+        button:hover {
+          transform: translateY(-2px);
+        }
+        
+        button:active {
+          transform: translateY(0);
+        }
+      `}</style>
     </div>
   );
 }

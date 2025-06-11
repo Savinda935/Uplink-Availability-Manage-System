@@ -3,6 +3,7 @@ import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import MonitorHome from './pages/monitorhome';
 import AllSectorsTable from './pages/AllSectorsTable';
 import Sidebar from './components/Sidebar';
+import PieChart3D from './pages/PieChart3D';
 
 function Navigation() {
   const location = useLocation();
@@ -60,6 +61,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MonitorHome />} />
           <Route path="/all-sectors" element={<AllSectorsTable />} />
+          <Route path="/pie-chart" element={<PieChart3D />} />
         </Routes>
       </div>
     </div>
