@@ -153,17 +153,6 @@ function MonitorHome() {
     overflow: 'hidden'
   };
 
-  const chartContainerStyle = {
-    background: 'rgba(255,255,255,0.95)',
-    borderRadius: '20px',
-    padding: '30px',
-    boxShadow: '0 15px 35px rgba(0,0,0,0.1)',
-    border: '1px solid rgba(255,255,255,0.3)',
-    position: 'relative',
-    backdropFilter: 'blur(15px)',
-    marginBottom: '30px'
-  };
-
   const analysisContainerStyle = {
     background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1))',
     padding: '25px',
@@ -379,8 +368,7 @@ function MonitorHome() {
 
   const handleChartExport = () => {
     if (amChartInstance) {
-      amChartInstance.export.capture({
-        format: "png",
+      amChartInstance.exporting.export("png", {
         fileName: "uplink_availability_chart"
       });
     } else {
@@ -545,27 +533,12 @@ function MonitorHome() {
           {/* Right Column */}
           <div style={sectionStyle}>
             <h3 style={{ ...sectionTitleStyle, display: 'flex', alignItems: 'center' }} className="section-title-icon">
-              Analytics & Visualization
+             Analytics & Visualization 
             </h3>
             
             {selectedSectors.length > 0 ? (
               <div>
-                <div style={chartContainerStyle}>
-                  <div style={{
-                    position: 'absolute',
-                    top: '20px',
-                    left: '20px',
-                    color: '#a0aec0',
-                    fontSize: '11px',
-                    fontWeight: '500',
-                    zIndex: 10,
-                    background: 'rgba(255,255,255,0.8)',
-                    padding: '4px 8px',
-                    borderRadius: '6px'
-                  }}>
-                    JS chart by amCharts
-                  </div>
-                  
+                <div style={{ marginTop: '60px' }}>
                   <AmchartsPie3D
                     uptime100Count={uptime100Count}
                     uptimeLessThan100Count={uptimeLessThan100Count}
@@ -603,7 +576,7 @@ function MonitorHome() {
                       border: '1px solid rgba(239, 68, 68, 0.3)'
                     }}>
                       <div style={{ fontSize: '14px', color: '#dc2626', fontWeight: '600' }}>
-                        🔴 Untreated Patients
+                        🔴 DownTime
                       </div>
                       <div style={{ fontSize: '24px', fontWeight: '700', color: '#b91c1c', marginTop: '8px' }}>
                         {(selectedSectors.length > 0 ? (uptimeLessThan100Count / selectedSectors.length * 100).toFixed(1) : 0)}%
@@ -644,7 +617,7 @@ function MonitorHome() {
                     <div style={statsCardStyle}>
                       <strong style={{ color: '#4a5568' }}>📍 Total Sectors:</strong>
                       <span style={{ color: '#667eea', fontWeight: '600', marginLeft: '8px' }}>
-                        {selectedSectors.length}
+                        17
                       </span>
                     </div>
                   </div>

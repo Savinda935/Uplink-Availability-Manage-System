@@ -14,7 +14,7 @@ function Sidebar() {
     height: 'calc(100vh - 64px)',
     color: 'white',
     position: 'fixed',
-    top: '64px',
+    top: '15px',
     left: 0,
     overflowY: 'auto',
     backdropFilter: 'blur(12px)',
@@ -82,11 +82,10 @@ function Sidebar() {
   };
 
   const menuItems = [
-    { path: '/', label: 'Dashboard', icon: '📊' },
-    { path: '/all-sectors', label: 'All Sectors Data', icon: '🏢' },
-    { path: '/analytics', label: 'Analytics', icon: '📈' },
-    { path: '/reports', label: 'Reports', icon: '📋' },
-    { path: '/settings', label: 'Settings', icon: '⚙️' }
+    { path: '/', label: 'Uplink Availability', icon: '' },
+    { path: '/advantis', label: 'WAN Firewall Availability ADVANTIS', icon: '' },
+    { path: '/fiber', label: 'WAN Firewall Availability Fiber', icon: '' },
+    
   ];
 
   const handleNavigation = (path) => {

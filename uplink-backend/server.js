@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const monitorRoutes = require('./routes/monitor_routes');
+const advantisRoutes = require('./routes/Advantis_route'); // Import Advantis routes
+const fiberRoutes = require('./routes/Fiber_route'); // Import Fiber routes
 
 const app = express();
 const PORT = 5000;
@@ -23,6 +25,8 @@ db.once('open', () => {
 });
 
 app.use('/api/sectors', monitorRoutes);
+app.use('/api/advantis', advantisRoutes); // Add Advantis routes
+app.use('/api/fiber', fiberRoutes); // Add Fiber routes
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

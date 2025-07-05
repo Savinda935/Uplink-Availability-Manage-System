@@ -2,7 +2,7 @@ body { background-color: #f0f0f0; color: #333; }
 
 #chartdiv {
   width: 100%;
-  height: 900px; /* Set a specific height for the chart container */
+  height: 450px; /* Updated to make the chart larger */
 }
 
 .section-title-icon::before {

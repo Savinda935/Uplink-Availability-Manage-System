@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2';
 
 export default function PieChart3D() {
   const [hoveredSegment, setHoveredSegment] = useState(null);
@@ -84,8 +85,8 @@ export default function PieChart3D() {
         <div 
           style={{
             perspective: '1000px',
-            width: '500px',
-            height: '500px',
+            width: '700px', // Increased width
+            height: '700px', // Increased height
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -121,9 +122,10 @@ export default function PieChart3D() {
 
             {/* Top Surface */}
             <svg
-              width="400"
-              height="400"
+              width="100%"
+              height="100%"
               viewBox="-200 -200 400 400"
+              preserveAspectRatio="xMidYMid meet"
               style={{
                 position: 'absolute',
                 top: 0,
@@ -325,24 +327,6 @@ export default function PieChart3D() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Instructions */}
-      <div style={{
-        position: 'absolute',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        background: 'rgba(255,255,255,0.1)',
-        backdropFilter: 'blur(10px)',
-        padding: '10px 20px',
-        borderRadius: '25px',
-        border: '1px solid rgba(255,255,255,0.2)',
-        color: 'white',
-        fontSize: '12px',
-        textAlign: 'center'
-      }}>
-        Move your mouse over the chart to rotate • Hover segments for details
       </div>
     </div>
   );
